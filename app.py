@@ -316,9 +316,35 @@ def main_app():
     # ============ 第五部分：生成参数 ============
     st.markdown("### ⚙️ 第四步：生成参数")
     
-    param_col1, param_col2 = st.columns(2)
+    param_col1, param_col2, param_col3 = st.columns(3)
     
     with param_col1:
+        st.markdown("**🤖 AI 模型**")
+        
+        # 获取模型列表
+        model_options = list(Config.AVAILABLE_MODELS.keys())
+        
+        # 找到默认模型的索引
+        default_idx = 0
+        for idx, (name, model_id) in enumerate(Config.AVAILABLE_MODELS.items()):
+            if model_id == Config.DEFAULT_MODEL:
+                default_idx = idx
+                break
+        
+        selected_model_name = st.selectbox(
+            "选择模型",
+            model_options,
+            index=default_idx,
+            label_visibility="collapsed"
+        )
+        
+        selected_model = Config.AVAILABLE_MODELS[selected_model_name]
+        
+        # 显示模型说明
+        if selected_model in Config.MODEL_DESCRIPTIONS:
+            st.caption(f"💡 {Config.MODEL_DESCRIPTIONS[selected_model]}")
+    
+    with param_col2:
         st.markdown("**🎨 风格强度**")
         style_strength = st.slider(
             "风格强度",
@@ -338,7 +364,7 @@ def main_app():
         else:
             st.caption("🟠 创意 - AI 较大发挥空间")
     
-    with param_col2:
+    with param_col3:
         st.markdown("**🚫 禁用词预设**")
         exclude_preset = st.selectbox(
             "预设",
@@ -417,8 +443,11 @@ def main_app():
         # ============ AI 分析 ============
         st.subheader("🤖 AI 分析中...")
         
-        client = GeminiImageClient(api_key=api_key, model=Config.IMAGE_MODEL)
+        # 使用用户选择的模型
+        client = GeminiImageClient(api_key=api_key, model=selected_model)
         first_image = Image.open(uploaded_files[0]).convert("RGB")
+        
+        st.caption(f"📌 使用模型: {selected_model_name}")
         
         with st.spinner("分析产品特征..."):
             try:

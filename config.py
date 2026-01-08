@@ -1,6 +1,6 @@
 """
 TEMU 智能出图系统 - 配置文件
-核心作者: 企鹅
+核心作者: 企鹅君
 版本: V6.5 Refactored
 """
 import os
@@ -49,8 +49,24 @@ class Config:
     # Gemini API Key（团队共享）
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     
-    # Gemini 模型配置
-    IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-2.0-flash-exp")
+    # 默认模型（可通过环境变量覆盖）
+    DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-3-pro-image-preview")
+    
+    # 可选模型列表 - 显示名称: 模型ID
+    AVAILABLE_MODELS = {
+        "🍌 Nano Banana Pro (推荐)": "gemini-3-pro-image-preview",
+        "⚡ Nano Banana Flash": "gemini-2.5-flash-image",
+        "🖼️ Imagen 3": "imagen-3.0-generate-002",
+        "🧪 Gemini 2.0 Flash": "gemini-2.0-flash-exp-image-generation",
+    }
+    
+    # 模型说明
+    MODEL_DESCRIPTIONS = {
+        "gemini-3-pro-image-preview": "Gemini 3 Pro 图像预览，专业级资产制作，高保真文本渲染",
+        "gemini-2.5-flash-image": "Gemini 2.5 Flash 图像，速度快效率高，适合大批量任务",
+        "imagen-3.0-generate-002": "Google Imagen 3，高质量图像生成",
+        "gemini-2.0-flash-exp-image-generation": "Gemini 2.0 实验版，多模态能力强",
+    }
     
     # API 请求超时（秒）
     API_TIMEOUT = int(os.getenv("API_TIMEOUT", "120"))
