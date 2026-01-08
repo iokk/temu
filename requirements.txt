@@ -1,14 +1,14 @@
-# TEMU 智能出图系统 - Python 依赖
+# TEMU 智能出图系统 V6.6
 # 核心作者: 企鹅
 
-# Web 框架
-streamlit>=1.29.0
+# Web 框架 - 固定版本
+streamlit==1.40.0
 
 # 图片处理
-Pillow>=10.0.0
+Pillow==10.4.0
 
 # Google AI
-google-genai>=0.3.0
+google-genai>=1.0.0
 
 # 环境变量
-python-dotenv>=1.0.0
+python-dotenv==1.0.1
