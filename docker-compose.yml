@@ -1,0 +1,61 @@
+# TEMU 智能出图系统 - Docker Compose 配置
+# 核心作者: 企鹅
+
+version: '3.8'
+
+services:
+  temu-app:
+    build: .
+    container_name: temu-image-generator
+    restart: unless-stopped
+    
+    ports:
+      - "8501:8501"
+    
+    volumes:
+      # 持久化数据目录
+      - ./data:/data
+    
+    environment:
+      # ============ 必填配置 ============
+      # Gemini API Key（必填）
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      
+      # ============ 认证配置 ============
+      # 访问密码（默认: temu2024）
+      - ACCESS_PASSWORD=${ACCESS_PASSWORD:-temu2024}
+      
+      # 管理员密码（默认: admin888）
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin888}
+      
+      # 管理员访问路径（默认: /admin）
+      - ADMIN_PATH=${ADMIN_PATH:-/admin}
+      
+      # ============ 配额配置 ============
+      # 每日免费额度（默认: 50）
+      - DAILY_LIMIT=${DAILY_LIMIT:-50}
+      
+      # ============ 模型配置 ============
+      # Gemini 模型（默认: gemini-2.0-flash-exp）
+      - IMAGE_MODEL=${IMAGE_MODEL:-gemini-2.0-flash-exp}
+      
+      # API 超时时间（秒，默认: 120）
+      - API_TIMEOUT=${API_TIMEOUT:-120}
+      
+      # ============ 其他配置 ============
+      # 数据目录
+      - DATA_DIR=/data
+      
+      # 调试模式（默认: false）
+      - DEBUG=${DEBUG:-false}
+    
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  data:
+    driver: local
