@@ -1,102 +1,87 @@
-# 🎨 TEMU 智能出图系统 V6.6
+# 🍌 TEMU 智能出图系统 V8.0
 
-> 基于 Gemini AI 的电商图片智能生成系统  
-> **核心作者: 企鹅**
+> Powered by **Nano Banana Pro** | AI 电商图片生成  
+> 核心作者: **企鹅**
 
-## ✨ 功能特性
+## ✨ V8.0 新功能
 
-- 🖼️ **5种专业图片** - 主图、场景、细节、对比、规格
-- 🤖 **AI 智能分析** - 自动识别产品特征和卖点
-- 🎨 **可调节风格** - 灵活控制 AI 创意程度
-- 📊 **配额管理** - 支持团队共享和个人 API Key
-- 🔒 **内容合规** - 自动过滤敏感内容
+| 功能 | 说明 |
+|------|------|
+| 🍌 **Nano Banana Pro** | 默认使用专业级模型 |
+| 📸 **4K 超高清** | 支持 1K/2K/4K 分辨率 |
+| 📐 **多种宽高比** | 1:1, 4:3, 16:9, 9:16 等 |
+| 🎨 **风格预设** | 产品摄影/生活场景/极简等 |
+| 🔄 **重新生成** | 不满意一键重试 |
 
-## 🚀 Zeabur 一键部署
-
-### 步骤 1: Fork 或上传代码
-
-将代码上传到 GitHub 仓库
-
-### 步骤 2: 在 Zeabur 部署
-
-1. 登录 [Zeabur](https://zeabur.com)
-2. 创建新项目
-3. 选择 "Deploy from GitHub"
-4. 选择你的仓库
-
-### 步骤 3: 配置环境变量
-
-在 Zeabur 控制台添加环境变量：
-
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `GEMINI_API_KEY` | ✅ | [获取 API Key](https://aistudio.google.com/apikey) |
-| `ACCESS_PASSWORD` | ❌ | 访问密码，默认 `temu2024` |
-| `ADMIN_PASSWORD` | ❌ | 管理员密码，默认 `admin888` |
-| `DAILY_LIMIT` | ❌ | 每日额度，默认 `50` |
-
-### 步骤 4: 绑定域名
-
-在 Zeabur 控制台绑定域名即可访问
-
-## 📁 项目结构
-
-```
-├── app.py              # 主应用
-├── config.py           # 配置管理
-├── gemini_client.py    # AI 客户端
-├── rules.py            # 规则引擎
-├── templates.py        # 提示词模板
-├── usage_tracker.py    # 使用量追踪
-├── requirements.txt    # 依赖清单
-├── zbpack.json         # Zeabur 配置
-└── .streamlit/
-    └── config.toml     # Streamlit 配置
-```
-
-## 🔧 本地开发
+## 🚀 快速部署
 
 ```bash
-# 安装依赖
-pip install -r requirements.txt
+# 解压
+unzip temu_v8.zip && cd temu_v8
 
-# 设置环境变量
-export GEMINI_API_KEY=your_key
+# 配置
+cp .env.example .env
+nano .env  # 填入 GEMINI_API_KEY
 
 # 启动
-streamlit run app.py
+chmod +x start.sh && ./start.sh
 ```
 
-## 📝 使用说明
+访问: `http://IP:8501` | 密码: `temu2024`
 
-1. **登录** - 输入访问密码
-2. **上传图片** - 支持 PNG/JPG/WebP
-3. **填写信息** - 商品名称、类型、材质
-4. **选择类型** - 主图/场景/细节/对比/规格
-5. **调整参数** - 风格强度、禁用词
-6. **生成下载** - AI 生成后打包下载
+## 📁 文件说明
 
-## 🎯 图片类型说明
+```
+temu_v8/
+├── app.py              # 主应用 (新UI)
+├── config.py           # 配置 (模型/风格/比例)
+├── prompts.py          # 提示词模板
+├── gemini_client.py    # Nano Banana 客户端
+├── rules.py            # 规则引擎
+├── usage_tracker.py    # 使用量追踪
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .env.example
+└── start.sh
+```
 
-| 类型 | 用途 |
-|------|------|
-| 🌟 主卖点图 | 突出产品核心优势 |
-| 🏡 场景图 | 展示产品使用场景 |
-| 🔍 细节图 | 展现产品工艺细节 |
-| ⚖️ 对比图 | 对比展示产品优势 |
-| 📐 规格图 | 产品参数信息展示 |
+## 🤖 模型说明
 
-## ❓ 常见问题
+| 模型 | ID | 特点 |
+|------|-----|------|
+| **Nano Banana Pro** | `gemini-3-pro-image-preview` | 4K, Thinking推理, 高质量 |
+| **Nano Banana** | `gemini-2.5-flash-image` | 快速, 低延迟 |
 
-### Q: 部署失败？
-A: 检查 `GEMINI_API_KEY` 是否正确设置
+## ⚙️ 配置项
 
-### Q: 生成失败？
-A: 检查 API Key 配额，或稍后重试
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `GEMINI_API_KEY` | - | **必填** |
+| `DEFAULT_MODEL` | gemini-3-pro-image-preview | 默认模型 |
+| `ACCESS_PASSWORD` | temu2024 | 访问密码 |
+| `DAILY_LIMIT` | 50 | 每日额度 |
+| `API_TIMEOUT` | 180 | 超时(秒) |
 
-### Q: 图片质量不佳？
-A: 上传更高清的原图，调整风格强度到 0.2-0.4
+## 📐 支持的宽高比
+
+- 1:1 正方形
+- 4:3 / 3:4
+- 16:9 / 9:16
+- 3:2 / 2:3
+- 21:9 超宽屏
+
+## 🎨 风格预设
+
+- 📷 产品摄影
+- 🏠 生活场景
+- ✨ 极简风格
+- 🎨 艺术插画
+- 📸 电商主图
+- 🌟 高端奢华
+- 🎯 信息图表
+- 🔧 自定义
 
 ---
 
-**核心作者: 企鹅** | TEMU 智能出图系统 V6.6
+**核心作者: 企鹅** | V8.0 Nano Banana Pro

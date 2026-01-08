@@ -1,6 +1,11 @@
 """
-TEMU 智能出图系统 - Gemini AI 客户端
+TEMU 智能出图系统 V8.0
+Gemini AI 客户端 - 支持 Nano Banana Pro
 核心作者: 企鹅
+
+支持功能:
+- Nano Banana Pro (gemini-3-pro-image-preview): 4K, Thinking, 14张参考图
+- Nano Banana (gemini-2.5-flash-image): 快速生成
 """
 from __future__ import annotations
 
@@ -16,15 +21,16 @@ from google.genai import types
 
 
 @dataclass
-class GeminiImageResult:
+class ImageResult:
     """图片生成结果"""
     image: Image.Image
     raw_response: Any
+    thinking_images: List[Image.Image] = None  # Thinking 过程中的草图
 
 
 @dataclass
 class ProductAnalysis:
-    """AI 分析产品图片后提取的信息"""
+    """产品分析结果"""
     product_description: str
     key_features: List[str]
     material_guess: str
@@ -32,39 +38,43 @@ class ProductAnalysis:
     suggested_scene: str
 
 
-class GeminiImageClient:
-    """Gemini 图片处理客户端"""
+class GeminiClient:
+    """Gemini AI 客户端 - Nano Banana 系列"""
 
-    def __init__(self, api_key: str, model: str, max_retries: int = 3):
+    def __init__(self, api_key: str, model: str = "gemini-3-pro-image-preview", max_retries: int = 3):
         self.api_key = api_key
         self.model = model
         self.max_retries = max_retries
         self.client = genai.Client(api_key=api_key)
+        
+        # 模型能力
+        self.is_pro = "pro" in model.lower()
+        self.supports_4k = self.is_pro
+        self.supports_thinking = self.is_pro
 
-    def _retry_with_backoff(self, func, *args, **kwargs):
-        """带退避的重试"""
+    def _retry(self, func, *args, **kwargs):
+        """带重试的调用"""
         last_error = None
         for attempt in range(self.max_retries):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
                 last_error = e
-                err_msg = str(e).lower()
-                retryable = any(x in err_msg for x in ["timeout", "rate", "503", "429", "retry"])
-                if retryable and attempt < self.max_retries - 1:
+                err = str(e).lower()
+                if any(x in err for x in ["timeout", "rate", "503", "429", "retry"]):
                     time.sleep((2 ** attempt) + 1)
                     continue
                 break
         raise last_error
 
-    def analyze_product_image(self, image: Image.Image) -> ProductAnalysis:
+    def analyze_image(self, image: Image.Image) -> ProductAnalysis:
         """分析产品图片"""
-        buffered = io.BytesIO()
+        buf = io.BytesIO()
         img = image.copy()
         if img.width > 1024 or img.height > 1024:
             img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
-        img.save(buffered, format="PNG", optimize=True)
-        img_data = buffered.getvalue()
+        img.save(buf, format="PNG", optimize=True)
+        img_data = buf.getvalue()
         
         prompt = """Analyze this product image and return JSON only:
 {
@@ -74,9 +84,9 @@ class GeminiImageClient:
     "color_scheme": "Colors",
     "suggested_scene": "Usage scenario"
 }
-Return ONLY JSON, no other text."""
+Return ONLY valid JSON."""
         
-        def do_analysis():
+        def call_api():
             cfg = types.GenerateContentConfig(response_modalities=["TEXT"])
             return self.client.models.generate_content(
                 model="gemini-2.0-flash-exp",
@@ -85,15 +95,11 @@ Return ONLY JSON, no other text."""
             )
         
         try:
-            resp = self._retry_with_backoff(do_analysis)
+            resp = self._retry(call_api)
             text = resp.text.strip() if resp.text else ""
-            
-            # 清理 markdown
             for mark in ["```json", "```"]:
                 text = text.replace(mark, "")
-            text = text.strip()
-            
-            data = json.loads(text)
+            data = json.loads(text.strip())
             return ProductAnalysis(
                 product_description=data.get("product_description", "Product"),
                 key_features=data.get("key_features", ["High Quality"])[:5],
@@ -110,80 +116,166 @@ Return ONLY JSON, no other text."""
                 suggested_scene="home setting",
             )
 
-    def generate_image_from_reference(
+    def generate_image(
         self,
-        reference_image: Image.Image,
+        reference: Image.Image,
         prompt: str,
-        negative_prompt: str,
-        style_strength: float = 0.3
-    ) -> GeminiImageResult:
-        """基于参考图生成新图片"""
-        buffered = io.BytesIO()
-        img = reference_image.copy()
+        negative_prompt: str = "",
+        aspect_ratio: str = "1:1",
+        resolution: str = "1K",
+        style_strength: float = 0.3,
+    ) -> ImageResult:
+        """
+        生成图片
+        
+        Args:
+            reference: 参考图片
+            prompt: 生成提示词
+            negative_prompt: 负向提示词
+            aspect_ratio: 宽高比 (1:1, 4:3, 16:9 等)
+            resolution: 分辨率 (1K, 2K, 4K) - 仅 Pro 支持 2K/4K
+            style_strength: 风格强度
+        """
+        # 压缩参考图
+        buf = io.BytesIO()
+        img = reference.copy()
         if img.width > 1024 or img.height > 1024:
             img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
-        img.save(buffered, format="PNG", optimize=True)
-        img_data = buffered.getvalue()
+        img.save(buf, format="PNG", optimize=True)
+        img_data = buf.getvalue()
         
+        # 构建完整提示词
         full_prompt = f"""
-CRITICAL: Keep the EXACT product from reference image.
-Only modify: background, lighting, composition.
-Style strength: {style_strength}
+Based on the reference product image, create a new image following these requirements:
+
+CRITICAL RULES:
+- Keep the EXACT same product from the reference image
+- Only modify: background, lighting, composition, presentation style
+- Style transformation level: {style_strength} (0=minimal change, 1=creative)
 
 REQUIREMENTS:
 {prompt}
 
-AVOID:
+MUST AVOID:
 {negative_prompt}
 
-Generate the SAME product with new styling."""
+Generate a professional, high-quality image of the SAME product with the new styling."""
+
+        # 配置生成参数
+        image_config_params = {"aspect_ratio": aspect_ratio}
         
-        def do_generation():
-            cfg = types.GenerateContentConfig(response_modalities=["IMAGE"])
+        # Pro 模型支持更高分辨率
+        if self.is_pro and resolution in ["2K", "4K"]:
+            image_config_params["image_size"] = resolution
+        
+        def call_api():
+            cfg = types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"],
+                image_config=types.ImageConfig(**image_config_params),
+            )
             return self.client.models.generate_content(
                 model=self.model,
                 contents=[types.Part.from_bytes(data=img_data, mime_type="image/png"), full_prompt],
                 config=cfg,
             )
         
-        resp = self._retry_with_backoff(do_generation)
-        img = self._extract_first_image(resp)
+        resp = self._retry(call_api)
         
-        if img is None:
+        # 提取图片
+        result_img, thinking_imgs = self._extract_images(resp)
+        
+        if result_img is None:
             raise RuntimeError("模型未返回图片，请检查输入或稍后重试")
         
-        return GeminiImageResult(image=img, raw_response=resp)
+        return ImageResult(image=result_img, raw_response=resp, thinking_images=thinking_imgs)
 
-    @staticmethod
-    def _extract_first_image(resp: Any) -> Optional[Image.Image]:
-        """提取图片"""
-        try:
-            candidates = getattr(resp, "candidates", None)
-            if candidates:
-                for cand in candidates:
-                    content = getattr(cand, "content", None)
-                    if not content:
-                        continue
-                    parts = getattr(content, "parts", None) or []
-                    for part in parts:
-                        inline = getattr(part, "inline_data", None)
-                        if inline and getattr(inline, "data", None):
-                            return Image.open(io.BytesIO(inline.data)).convert("RGB")
-                        if hasattr(part, "as_image"):
-                            try:
-                                return part.as_image().convert("RGB")
-                            except Exception:
-                                pass
-        except Exception:
-            pass
+    def generate_text_to_image(
+        self,
+        prompt: str,
+        aspect_ratio: str = "1:1",
+        resolution: str = "1K",
+    ) -> ImageResult:
+        """
+        纯文本生成图片 (无参考图)
+        """
+        image_config_params = {"aspect_ratio": aspect_ratio}
+        if self.is_pro and resolution in ["2K", "4K"]:
+            image_config_params["image_size"] = resolution
+        
+        def call_api():
+            cfg = types.GenerateContentConfig(
+                response_modalities=["IMAGE", "TEXT"],
+                image_config=types.ImageConfig(**image_config_params),
+            )
+            return self.client.models.generate_content(
+                model=self.model,
+                contents=[prompt],
+                config=cfg,
+            )
+        
+        resp = self._retry(call_api)
+        result_img, thinking_imgs = self._extract_images(resp)
+        
+        if result_img is None:
+            raise RuntimeError("模型未返回图片")
+        
+        return ImageResult(image=result_img, raw_response=resp, thinking_images=thinking_imgs)
+
+    def _extract_images(self, resp: Any) -> tuple:
+        """
+        从响应中提取图片
+        返回: (最终图片, Thinking过程图片列表)
+        """
+        final_image = None
+        thinking_images = []
         
         try:
-            parts = getattr(resp, "parts", None) or []
-            for part in parts:
+            # 遍历所有 parts
+            for part in getattr(resp, "parts", []) or []:
+                # 检查是否是 thinking 阶段的图片
+                is_thought = getattr(part, "thought", False)
+                
+                # 尝试获取图片
+                img = None
                 inline = getattr(part, "inline_data", None)
                 if inline and getattr(inline, "data", None):
-                    return Image.open(io.BytesIO(inline.data)).convert("RGB")
+                    try:
+                        img = Image.open(io.BytesIO(inline.data)).convert("RGB")
+                    except Exception:
+                        pass
+                elif hasattr(part, "as_image"):
+                    try:
+                        img = part.as_image().convert("RGB")
+                    except Exception:
+                        pass
+                
+                if img:
+                    if is_thought:
+                        thinking_images.append(img)
+                    else:
+                        final_image = img  # 最后一个非 thought 图片是最终结果
+            
+            # 如果没找到，尝试从 candidates 中提取
+            if final_image is None:
+                candidates = getattr(resp, "candidates", None)
+                if candidates:
+                    for cand in candidates:
+                        content = getattr(cand, "content", None)
+                        if not content:
+                            continue
+                        for part in getattr(content, "parts", []) or []:
+                            inline = getattr(part, "inline_data", None)
+                            if inline and getattr(inline, "data", None):
+                                try:
+                                    final_image = Image.open(io.BytesIO(inline.data)).convert("RGB")
+                                except Exception:
+                                    pass
+                            elif hasattr(part, "as_image"):
+                                try:
+                                    final_image = part.as_image().convert("RGB")
+                                except Exception:
+                                    pass
         except Exception:
             pass
         
-        return None
+        return final_image, thinking_images
