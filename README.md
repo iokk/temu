@@ -1,0 +1,87 @@
+# 🍌 TEMU 智能出图系统 V8.0
+
+> Powered by **Nano Banana Pro** | AI 电商图片生成  
+> 核心作者: **企鹅**
+
+## ✨ V8.0 新功能
+
+| 功能 | 说明 |
+|------|------|
+| 🍌 **Nano Banana Pro** | 默认使用专业级模型 |
+| 📸 **4K 超高清** | 支持 1K/2K/4K 分辨率 |
+| 📐 **多种宽高比** | 1:1, 4:3, 16:9, 9:16 等 |
+| 🎨 **风格预设** | 产品摄影/生活场景/极简等 |
+| 🔄 **重新生成** | 不满意一键重试 |
+
+## 🚀 快速部署
+
+```bash
+# 解压
+unzip temu_v8.zip && cd temu_v8
+
+# 配置
+cp .env.example .env
+nano .env  # 填入 GEMINI_API_KEY
+
+# 启动
+chmod +x start.sh && ./start.sh
+```
+
+访问: `http://IP:8501` | 密码: `temu2024`
+
+## 📁 文件说明
+
+```
+temu_v8/
+├── app.py              # 主应用 (新UI)
+├── config.py           # 配置 (模型/风格/比例)
+├── prompts.py          # 提示词模板
+├── gemini_client.py    # Nano Banana 客户端
+├── rules.py            # 规则引擎
+├── usage_tracker.py    # 使用量追踪
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .env.example
+└── start.sh
+```
+
+## 🤖 模型说明
+
+| 模型 | ID | 特点 |
+|------|-----|------|
+| **Nano Banana Pro** | `gemini-3-pro-image-preview` | 4K, Thinking推理, 高质量 |
+| **Nano Banana** | `gemini-2.5-flash-image` | 快速, 低延迟 |
+
+## ⚙️ 配置项
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `GEMINI_API_KEY` | - | **必填** |
+| `DEFAULT_MODEL` | gemini-3-pro-image-preview | 默认模型 |
+| `ACCESS_PASSWORD` | temu2024 | 访问密码 |
+| `DAILY_LIMIT` | 50 | 每日额度 |
+| `API_TIMEOUT` | 180 | 超时(秒) |
+
+## 📐 支持的宽高比
+
+- 1:1 正方形
+- 4:3 / 3:4
+- 16:9 / 9:16
+- 3:2 / 2:3
+- 21:9 超宽屏
+
+## 🎨 风格预设
+
+- 📷 产品摄影
+- 🏠 生活场景
+- ✨ 极简风格
+- 🎨 艺术插画
+- 📸 电商主图
+- 🌟 高端奢华
+- 🎯 信息图表
+- 🔧 自定义
+
+---
+
+**核心作者: 企鹅** | V8.0 Nano Banana Pro

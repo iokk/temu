@@ -1,0 +1,33 @@
+# TEMU 智能出图系统 V8.0
+# Docker Compose
+
+version: '3.8'
+
+services:
+  temu:
+    build: .
+    container_name: temu-app
+    restart: unless-stopped
+    
+    ports:
+      - "${PORT:-8501}:8501"
+    
+    volumes:
+      - ./data:/app/data
+      # 挂载提示词文件方便修改
+      # - ./prompts.py:/app/prompts.py:ro
+    
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ACCESS_PASSWORD=${ACCESS_PASSWORD:-temu2024}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin888}
+      - DAILY_LIMIT=${DAILY_LIMIT:-50}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-3-pro-image-preview}
+      - API_TIMEOUT=${API_TIMEOUT:-180}
+      - DATA_DIR=/app/data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
