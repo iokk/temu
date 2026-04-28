@@ -6,7 +6,6 @@
 
 1. macOS 本地启动
 2. Linux 本地启动
-3. 可选 Docker 启动
 
 ## 当前工作流
 
@@ -58,6 +57,28 @@ streamlit run app.py
 6. 如需取消登录自动启动，可执行 `./uninstall-mac-login-launcher.sh`。
 7. 如果还没有配置仓库远端，可先执行 `./configure-update-remote.sh <repo-url> [branch]`。
 
+## 程序包迁移
+
+如果你只想备份程序、不备份数据，使用：
+
+```bash
+./package-app.sh
+```
+
+脚本会生成：
+
+```text
+.release/电商出图工作台-app-package.zip
+```
+
+这个压缩包只包含程序文件，不包含：
+
+1. `data/`
+2. `.venv/`
+3. `.runtime/`
+
+换新 Mac 时，直接解压这个压缩包，然后按 [NEW-MAC-SETUP.md](./NEW-MAC-SETUP.md) 操作即可。
+
 建议先编辑 `.env`，至少填入一个可用的 Gemini Key：
 
 ```env
@@ -84,21 +105,22 @@ GOOGLE_API_KEY=your_gemini_key
 app.py
 .env.example
 requirements.txt
+package-app.sh
 start-local.sh
 start-mac.command
 install-mac-login-launcher.sh
 uninstall-mac-login-launcher.sh
 configure-update-remote.sh
 heartbeat_launcher.py
-data/providers.json
-data/settings.json
+NEW-MAC-SETUP.md
 ```
 
 说明：
 
-1. `data/` 保存本地设置、提供商信息和运行时数据。
+1. `data/` 只保存本地设置和运行时数据，不参与程序包分发。
 2. `start-mac.command` 是 Mac 双击启动入口。
-3. 桌面客户端代码和部署链路已经从当前主目录移除。
+3. `package-app.sh` 用来生成可迁移的 Mac 程序压缩包。
+4. 桌面客户端代码和部署链路已经从当前主目录移除。
 
 ## 当前版本边界
 
