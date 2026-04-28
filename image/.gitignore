@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.runtime/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 数据和配置
+data/
+*.json
+!.env.example
+.env
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

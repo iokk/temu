@@ -1,0 +1,107 @@
+# 🍌 电商出图工作台 V15.2.1
+
+当前仓库已经收敛为单一的 Streamlit Web 应用。产品入口只有 `app.py`，不再包含 Electron、pywebview、Docker 部署链路或桌面客户端启动链路。
+
+支持目标：
+
+1. macOS 本地启动
+2. Linux 本地启动
+3. 可选 Docker 启动
+
+## 当前工作流
+
+1. 在本机启动 Streamlit 服务。
+2. 进入 `⚙️ 提供商设置` 配置可用提供商。
+3. 回到 `🚀 智能组图`、`🎨 快速出图 / 图片翻译` 或 `🏷️ 标题生成` 开始使用。
+
+如果本地 `.env` 中已经填写 `GOOGLE_API_KEY` 或 `GEMINI_API_KEY`，并且 `data/providers.json` 还是空的，应用会在首次读取提供商时自动创建一个默认 Gemini 提供商。
+
+## 本地启动
+
+### macOS / Linux
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+streamlit run app.py
+```
+
+默认访问地址：`http://localhost:8501`
+
+建议使用 Python `3.12` 作为本地运行时。
+
+### 更快的启动方式
+
+1. 命令行启动：`./start-local.sh`
+2. 停止服务：`./stop-local.sh`
+3. Mac 双击启动：直接双击 `start-mac.command`
+4. Mac 登录自动启动：`./install-mac-login-launcher.sh`
+5. 配置自动更新远端：`./configure-update-remote.sh <repo-url> [branch]`
+
+`start-local.sh` / `start-mac.command` 会自动：
+
+1. 检查或创建 `.venv`
+2. 必要时安装依赖
+3. 启动心跳守护器
+4. 自动检查 Git 更新条件
+5. 拉起 Streamlit 并自动打开浏览器
+
+说明：
+
+1. 双击 `start-mac.command` 时，会打开一个 Terminal 窗口并保持服务运行。
+2. 心跳守护器会定期检查服务健康，异常退出时自动重启。
+3. 启动器会自动识别外层 workspace 仓库；只有当该仓库工作区干净且配置了更新远端时，才会尝试自动更新。
+4. 关闭这个 Terminal 窗口，服务也会一起停止。
+5. 如果希望登录后自动启动，可执行 `./install-mac-login-launcher.sh`。
+6. 如需取消登录自动启动，可执行 `./uninstall-mac-login-launcher.sh`。
+7. 如果还没有配置仓库远端，可先执行 `./configure-update-remote.sh <repo-url> [branch]`。
+
+建议先编辑 `.env`，至少填入一个可用的 Gemini Key：
+
+```env
+GOOGLE_API_KEY=your_gemini_key
+```
+
+也可以留空 `.env`，启动后再进入 `提供商设置` 手动添加。
+
+## 页面结构
+
+| 页面 | 当前用途 |
+|---|---|
+| `🚀 智能组图` | 复杂商品组图工作流，可选同时生成英文 + 目标语言标题，并设置图片文案语言 |
+| `🎨 快速出图 / 图片翻译` | 支持 `创意出图` 与 `合规翻译` 两种模式；翻译模式会尽量保留原图结构，只替换目标语言文案 |
+| `🏷️ 标题生成` | 单独进行标题生成，支持文字、图片或混合输入，并选择目标语言 |
+| `📚 项目中心` | 查看进行中 / 成功 / 失败项目，下载本地 ZIP、打开保存目录、删除历史项目 |
+| `⚙️ 提供商设置` | 管理本地个人提供商资料 |
+
+## 目录说明
+
+常用文件如下：
+
+```text
+app.py
+.env.example
+requirements.txt
+start-local.sh
+start-mac.command
+install-mac-login-launcher.sh
+uninstall-mac-login-launcher.sh
+configure-update-remote.sh
+heartbeat_launcher.py
+data/providers.json
+data/settings.json
+```
+
+说明：
+
+1. `data/` 保存本地设置、提供商信息和运行时数据。
+2. `start-mac.command` 是 Mac 双击启动入口。
+3. 桌面客户端代码和部署链路已经从当前主目录移除。
+
+## 当前版本边界
+
+1. 当前产品只保留本地 Streamlit Web 服务。
+2. 启动方式以本机直接运行和 Mac 双击启动为主。
+3. 不再维护桌面客户端、Docker、Windows 启动脚本或历史快照目录。
