@@ -1,0 +1,12 @@
+.git
+.venv
+.runtime
+.release
+.streamlit
+__pycache__
+*.pyc
+.env
+.DS_Store
+data
+*.log
+Dockerfile.image-workbench-streamlit

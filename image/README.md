@@ -1,11 +1,14 @@
-# 🍌 电商出图工作台 V15.2.1
+# 🍌 TuFlash 电商出图工作台
 
-当前仓库已经收敛为单一的 Streamlit Web 应用。产品入口只有 `app.py`，不再包含 Electron、pywebview、Docker 部署链路或桌面客户端启动链路。
+TuFlash 是一个基于 Streamlit 的电商出图工作台，用于商品素材整理、智能组图、图片翻译和标题生成。
+
+当前仓库已经收敛为单一 Web 应用。产品入口是 `app.py`，本地启动、Mac 双击启动和 Docker/Zeabur 部署都围绕这个入口进行。
 
 支持目标：
 
 1. macOS 本地启动
 2. Linux 本地启动
+3. Docker / Zeabur 云端部署
 
 ## 当前工作流
 
@@ -30,6 +33,37 @@ streamlit run app.py
 默认访问地址：`http://localhost:8501`
 
 建议使用 Python `3.12` 作为本地运行时。
+
+## Docker 启动
+
+仓库包含 `Dockerfile`，可用于容器化部署：
+
+```bash
+docker build -t tuflash .
+docker run --rm -p 8501:8501 --env-file .env tuflash
+```
+
+访问地址：`http://localhost:8501`
+
+容器默认启动命令：
+
+```bash
+streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8501} --server.headless=true
+```
+
+## Zeabur 部署
+
+仓库包含 `zbpack.json`，用于 Zeabur 识别 Python/Streamlit 应用。
+
+建议部署方式：
+
+1. 将本仓库推送到 GitHub。
+2. 在 Zeabur 新建项目。
+3. 选择 GitHub 仓库 `iokk/tuflash`。
+4. 设置环境变量，例如 `GOOGLE_API_KEY` 或 `GEMINI_API_KEY`。
+5. 使用 Zeabur 自动构建并启动服务。
+
+如果使用 Zeabur 本地 CLI 上传部署，构建可能受网络和镜像拉取影响；更推荐 GitHub 仓库部署。
 
 ### 更快的启动方式
 
@@ -105,6 +139,8 @@ GOOGLE_API_KEY=your_gemini_key
 app.py
 .env.example
 requirements.txt
+Dockerfile
+zbpack.json
 package-app.sh
 start-local.sh
 start-mac.command
@@ -126,4 +162,12 @@ NEW-MAC-SETUP.md
 
 1. 当前产品只保留本地 Streamlit Web 服务。
 2. 启动方式以本机直接运行和 Mac 双击启动为主。
-3. 不再维护桌面客户端、Docker、Windows 启动脚本或历史快照目录。
+3. Docker 和 Zeabur 配置仅服务于 Web 部署，不包含桌面客户端能力。
+4. 不再维护 Electron、pywebview、Windows 启动脚本或历史快照目录。
+
+## 安全说明
+
+1. 不要提交 `.env`、`data/`、`.venv/`、`.runtime/`、`.release/` 等本地运行文件。
+2. 不要把 API Key、S3 Secret、账号密码等敏感信息写进代码或 README。
+3. 云端部署时请通过平台环境变量配置密钥。
+4. 如果密钥曾经公开暴露，应立即在对应平台删除并重新生成。
