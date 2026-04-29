@@ -1,0 +1,10 @@
+{
+  "start_command": "streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8501} --server.headless=true --browser.gatherUsageStats=false",
+  "python": {
+    "version": "3.11",
+    "package_manager": "pip"
+  },
+  "streamlit": {
+    "entry": "app.py"
+  }
+}
