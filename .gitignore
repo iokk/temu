@@ -1,0 +1,4 @@
+.DS_Store
+**/.playwright-mcp/
+**/.kilo/agent-manager.json
+image.zip
